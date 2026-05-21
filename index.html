@@ -1,362 +1,616 @@
-<style>
-* { box-sizing: border-box; }
-body { font-family: var(--font-sans); margin: 0; padding: 0; }
-.container { max-width: 700px; margin: 0 auto; padding: 1rem; background: var(--color-background-primary); }
-.header { background: var(--color-background-secondary); padding: 1.5rem; border-radius: var(--border-radius-lg); margin-bottom: 2rem; border: 0.5px solid var(--color-border-tertiary); }
-.header h1 { margin: 0; font-size: 22px; font-weight: 500; display: flex; gap: 12px; align-items: center; }
-.header p { margin: 0.5rem 0 0 0; font-size: 14px; color: var(--color-text-secondary); }
-.section { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; }
-.section-title { font-size: 18px; font-weight: 500; margin: 0 0 1.5rem 0; display: flex; gap: 8px; align-items: center; }
-.form-group { margin-bottom: 1.5rem; }
-.form-group:last-child { margin-bottom: 0; }
-.form-label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 0.5rem; color: var(--color-text-primary); }
-.form-label .required { color: var(--color-text-danger); }
-input[type="text"], input[type="date"], textarea, select { width: 100%; padding: 0.75rem; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); font-size: 14px; font-family: var(--font-sans); }
-input[type="text"]:focus, input[type="date"]:focus, textarea:focus, select:focus { outline: none; border-color: var(--color-border-info); box-shadow: 0 0 0 2px rgba(24, 95, 165, 0.1); }
-textarea { resize: vertical; min-height: 100px; }
-.button-group { display: flex; gap: 12px; margin-top: 2rem; }
-button { padding: 0.75rem 1.5rem; font-size: 14px; font-weight: 500; border: 0.5px solid var(--color-border-secondary); background: transparent; border-radius: var(--border-radius-md); cursor: pointer; transition: all 0.2s; }
-button:hover { background: var(--color-background-secondary); }
-button.primary { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
-button.primary:hover { opacity: 0.9; }
-.pill-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
-.pill { padding: 0.75rem 1rem; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); cursor: pointer; text-align: center; font-size: 14px; transition: all 0.2s; }
-.pill:hover { background: var(--color-background-secondary); }
-.pill.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); }
-.tabs { display: flex; gap: 8px; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 1.5rem; overflow-x: auto; }
-.tab { padding: 0.75rem 1rem; border: none; background: transparent; cursor: pointer; font-size: 14px; border-bottom: 2px solid transparent; color: var(--color-text-secondary); transition: all 0.2s; }
-.tab.active { border-color: var(--color-border-info); color: var(--color-text-info); }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-.success-message { background: var(--color-background-success); color: var(--color-text-success); padding: 1rem; border-radius: var(--border-radius-md); margin-top: 1rem; border: 0.5px solid var(--color-border-success); }
-.progress-bar { width: 100%; height: 4px; background: var(--color-background-secondary); border-radius: 2px; margin-bottom: 2rem; overflow: hidden; }
-.progress-fill { height: 100%; background: var(--color-background-info); width: 0%; transition: width 0.3s; }
-.file-input-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
-.file-input-wrapper input[type="file"] { position: absolute; left: -9999px; }
-.file-input-label { display: block; padding: 1rem; border: 2px dashed var(--color-border-secondary); border-radius: var(--border-radius-md); text-align: center; cursor: pointer; transition: all 0.2s; }
-.file-input-label:hover { border-color: var(--color-border-info); background: var(--color-background-secondary); }
-.file-list { margin-top: 1rem; }
-.file-item { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--color-background-secondary); border-radius: var(--border-radius-md); margin-bottom: 0.5rem; font-size: 13px; }
-.file-item button { padding: 0.25rem 0.75rem; font-size: 12px; }
-</style>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vistoria Hídrica INEA</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f5f5f5;
+    }
+    .container { max-width: 800px; margin: 0 auto; padding: 1rem; }
+    .header { 
+      background: linear-gradient(135deg, #0066cc, #004499);
+      color: white;
+      padding: 2rem;
+      border-radius: 8px;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .header h1 { margin: 0; font-size: 28px; }
+    .header p { margin: 0.5rem 0 0 0; opacity: 0.9; }
+    .main { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .tabs { display: flex; gap: 8px; border-bottom: 2px solid #eee; margin-bottom: 2rem; overflow-x: auto; }
+    .tab-btn { 
+      padding: 12px 16px; 
+      border: none; 
+      background: transparent; 
+      cursor: pointer; 
+      font-size: 14px;
+      font-weight: 500;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: #0066cc; }
+    .tab-btn.active { 
+      color: #0066cc; 
+      border-bottom-color: #0066cc;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group:last-child { margin-bottom: 0; }
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: #333;
+      font-size: 14px;
+    }
+    .required { color: #e74c3c; }
+    input[type="text"], 
+    input[type="date"], 
+    textarea, 
+    select { 
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border 0.2s;
+    }
+    input[type="text"]:focus, 
+    input[type="date"]:focus, 
+    textarea:focus, 
+    select:focus {
+      outline: none;
+      border-color: #0066cc;
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+    textarea { 
+      resize: vertical; 
+      min-height: 100px;
+    }
+    .pill-group {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .pill-group.grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .pill-group.grid-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .pill {
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+    .pill:hover {
+      border-color: #0066cc;
+      color: #0066cc;
+    }
+    .pill.active {
+      background: #0066cc;
+      color: white;
+      border-color: #0066cc;
+    }
+    .file-upload {
+      border: 2px dashed #ddd;
+      border-radius: 4px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fafafa;
+    }
+    .file-upload:hover {
+      border-color: #0066cc;
+      background: #f0f7ff;
+    }
+    .file-upload input[type="file"] {
+      display: none;
+    }
+    .file-list {
+      margin-top: 1rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .file-item {
+      background: #f0f7ff;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .file-item button {
+      background: none;
+      border: none;
+      color: #e74c3c;
+      cursor: pointer;
+      font-weight: bold;
+      padding: 0;
+    }
+    .button-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #0066cc;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #0052a3;
+    }
+    .btn-secondary {
+      background: #eee;
+      color: #333;
+    }
+    .btn-secondary:hover {
+      background: #ddd;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: #eee;
+      border-radius: 2px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #0066cc;
+      width: 0%;
+      transition: width 0.3s;
+    }
+    .alert {
+      padding: 1rem;
+      border-radius: 4px;
+      margin-top: 1rem;
+      display: none;
+      animation: slideIn 0.3s ease;
+    }
+    .alert.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .alert.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .alert.show { display: block; }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hidden { display: none; }
+    .section-subtitle {
+      font-size: 12px;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏗️ Vistoria Hídrica INEA</h1>
+      <p>Sistema de coleta de dados para infraestrutura hídrica</p>
+    </div>
 
-<div class="container">
-  <div class="header">
-    <h1><i class="ti ti-water-check" style="font-size:24px" aria-hidden="true"></i>Vistoria Hídrica INEA</h1>
-    <p>Sistema de Coleta de Dados para Infraestrutura Hídrica</p>
-  </div>
+    <div class="main">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
 
-  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 5%;"></div></div>
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(0)">📋 Contexto</button>
+        <button class="tab-btn" onclick="switchTab(1)">📍 Identificação</button>
+        <button class="tab-btn" onclick="switchTab(2)">⚠️ Avaliação</button>
+        <button class="tab-btn" onclick="switchTab(3)">📷 Figuras</button>
+        <button class="tab-btn" onclick="switchTab(4)">✅ Conclusão</button>
+        <button class="tab-btn" onclick="switchTab(5)">👤 Responsável</button>
+      </div>
 
-  <div class="tabs">
-    <button class="tab active" onclick="showTab(event, 'tab1')">Contexto</button>
-    <button class="tab" onclick="showTab(event, 'tab2')">Identificação</button>
-    <button class="tab" onclick="showTab(event, 'tab3')">Avaliação</button>
-    <button class="tab" onclick="showTab(event, 'tab4')">Figuras</button>
-    <button class="tab" onclick="showTab(event, 'tab5')">Conclusão</button>
-    <button class="tab" onclick="showTab(event, 'tab6')">Responsável</button>
-  </div>
-
-  <!-- TAB 1: CONTEXTO -->
-  <div id="tab1" class="tab-content active">
-    <div class="section">
-      <h2 class="section-title"><i class="ti ti-file-text" style="font-size:18px" aria-hidden="true"></i>Contexto da Vistoria</h2>
-      
-      <div class="form-group">
-        <label class="form-label">O que motivou esta vistoria? <span class="required">*</span></label>
-        <div class="pill-group" style="grid-template-columns: 1fr;">
-          <button class="pill" onclick="selectPill(this, 'motivo_sei')">Solicitação SEI</button>
-          <button class="pill" onclick="selectPill(this, 'motivo_os')">Ordem de Serviço</button>
-          <button class="pill" onclick="selectPill(this, 'motivo_diretoria')">Solicitação da Diretoria</button>
-          <button class="pill" onclick="selectPill(this, 'motivo_outro')">Outro</button>
+      <!-- TAB 0: CONTEXTO -->
+      <div class="tab-content active">
+        <div class="form-group">
+          <label>O que motivou esta vistoria? <span class="required">*</span></label>
+          <div class="pill-group">
+            <button class="pill" onclick="selectPill(this, 'motivo', 'Solicitação SEI')">Solicitação SEI</button>
+            <button class="pill" onclick="selectPill(this, 'motivo', 'Ordem de Serviço')">Ordem de Serviço</button>
+            <button class="pill" onclick="selectPill(this, 'motivo', 'Solicitação da Diretoria')">Solicitação da Diretoria</button>
+            <button class="pill" onclick="selectPill(this, 'motivo', 'Outro')">Outro</button>
+          </div>
+          <input type="text" id="motivo_outro" placeholder="Especificar outro motivo" class="hidden" style="display: none;">
         </div>
-        <input type="text" id="motivo_outro_text" placeholder="Especificar outro motivo" style="display:none;">
+
+        <div class="form-group">
+          <label>Número do processo SEI</label>
+          <input type="text" id="numero_sei" placeholder="Ex: 070002/005517/2022">
+        </div>
+
+        <div class="form-group">
+          <label>Número da Ordem de Serviço</label>
+          <input type="text" id="numero_os" placeholder="Ex: OS-2024-001">
+        </div>
+
+        <div class="form-group">
+          <label>Contexto adicional ou justificativa</label>
+          <textarea id="contexto_detalhado" placeholder="Investigação de erosão / Avaliação pós-chuva..."></textarea>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Número do processo SEI</label>
-        <input type="text" id="numero_sei" placeholder="Ex: 070002/005517/2022">
+      <!-- TAB 1: IDENTIFICAÇÃO -->
+      <div class="tab-content">
+        <div class="form-group">
+          <label>Data da vistoria <span class="required">*</span></label>
+          <input type="date" id="data_vistoria">
+        </div>
+
+        <div class="form-group">
+          <label>Tipo de infraestrutura <span class="required">*</span></label>
+          <div class="pill-group">
+            <button class="pill" onclick="selectPill(this, 'tipo', 'Canalização')">Canalização</button>
+            <button class="pill" onclick="selectPill(this, 'tipo', 'Curso hídrico')">Curso hídrico</button>
+            <button class="pill" onclick="selectPill(this, 'tipo', 'Barragem')">Barragem</button>
+            <button class="pill" onclick="selectPill(this, 'tipo', 'Contenção')">Contenção</button>
+            <button class="pill" onclick="selectPill(this, 'tipo', 'Comporta')">Comporta</button>
+            <button class="pill" onclick="selectPill(this, 'tipo', 'Outro')">Outro</button>
+          </div>
+          <input type="text" id="tipo_outro" placeholder="Especificar tipo" class="hidden" style="display: none;">
+        </div>
+
+        <div class="form-group">
+          <label>Nome/localização do local vistoriado <span class="required">*</span></label>
+          <textarea id="localizacao" placeholder="Ex: Rio Piabanha, entre Avenida... e Rua..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Coordenadas geográficas (SIRGAS 2000 - Zona 23K)</label>
+          <input type="text" id="coordenadas" placeholder="Ex: E: 12345678 N: 7654321">
+        </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Número da Ordem de Serviço</label>
-        <input type="text" id="numero_os" placeholder="Ex: OS-2024-001">
+      <!-- TAB 2: AVALIAÇÃO -->
+      <div class="tab-content">
+        <div class="form-group">
+          <label>Nível de risco geral <span class="required">*</span></label>
+          <div class="pill-group grid-3">
+            <button class="pill" onclick="selectPill(this, 'risco', 'Baixo')">Baixo</button>
+            <button class="pill" onclick="selectPill(this, 'risco', 'Médio')">Médio</button>
+            <button class="pill" onclick="selectPill(this, 'risco', 'Alto')">Alto</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Prazo para realização do projeto <span class="required">*</span></label>
+          <div class="pill-group">
+            <button class="pill" onclick="selectPill(this, 'prazo', 'Imediato (até 30 dias)')">Imediato (até 30 dias)</button>
+            <button class="pill" onclick="selectPill(this, 'prazo', 'Curto prazo (até 3 meses)')">Curto prazo (até 3 meses)</button>
+            <button class="pill" onclick="selectPill(this, 'prazo', 'Médio prazo (até 1 ano)')">Médio prazo (até 1 ano)</button>
+            <button class="pill" onclick="selectPill(this, 'prazo', 'Monitoramento')">Monitoramento</button>
+          </div>
+        </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Contexto adicional ou justificativa</label>
-        <textarea id="contexto_detalhado" placeholder="Investigação de erosão de margem / Avaliação pós-chuva extrema..."></textarea>
+      <!-- TAB 3: FIGURAS -->
+      <div class="tab-content">
+        <div class="form-group">
+          <label>Upload de imagens</label>
+          <div class="file-upload" onclick="document.getElementById('imagens').click()">
+            <div>📸 Clique ou arraste imagens aqui</div>
+            <div style="font-size: 12px; color: #999; margin-top: 0.5rem;">PNG, JPG, GIF</div>
+            <input type="file" id="imagens" multiple accept="image/*" onchange="handleFiles(event)">
+          </div>
+          <div class="file-list" id="fileList"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Análise das figuras</label>
+          <textarea id="figuras_analise" placeholder="FIGURA 1 - [Nome da imagem]&#10;Título: [Título descritivo]&#10;Problemas encontrados: [Descrever anomalias]&#10;Estado estrutural: Bom / Regular / Crítico&#10;Recomendações: [Ações necessárias]&#10;&#10;FIGURA 2 - ..." style="min-height: 200px;"></textarea>
+        </div>
       </div>
+
+      <!-- TAB 4: CONCLUSÃO -->
+      <div class="tab-content">
+        <div class="form-group">
+          <label>Conclusão geral da vistoria</label>
+          <textarea id="conclusao_geral" placeholder="Síntese geral dos achados..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Recomendações e prazos globais</label>
+          <textarea id="recomendacoes_globais" placeholder="Ações prioritárias, cronograma..."></textarea>
+        </div>
+      </div>
+
+      <!-- TAB 5: RESPONSÁVEL -->
+      <div class="tab-content">
+        <div class="form-group">
+          <label>Quem é o responsável? <span class="required">*</span></label>
+          <div class="pill-group">
+            <button class="pill" onclick="selectResponsavel('erick')">Erick Santana Amâncio</button>
+            <button class="pill" onclick="selectResponsavel('outro')">Outro profissional</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Nome completo <span class="required">*</span></label>
+          <input type="text" id="engenheiro_nome" value="Erick Santana Amâncio">
+        </div>
+
+        <div class="form-group">
+          <label>Formação/profissão <span class="required">*</span></label>
+          <input type="text" id="engenheiro_formacao" value="Engenheiro Civil">
+        </div>
+
+        <div class="form-group">
+          <label>CREA <span class="required">*</span></label>
+          <input type="text" id="engenheiro_crea" value="CREA-RJ - 2013138619">
+        </div>
+      </div>
+
+      <div class="button-group">
+        <button class="btn-secondary" onclick="salvarRascunho()">💾 Salvar Rascunho</button>
+        <button class="btn-primary" onclick="gerarRelatorio()">📥 Gerar Relatório Word</button>
+      </div>
+
+      <div class="alert" id="alertBox"></div>
     </div>
   </div>
 
-  <!-- TAB 2: IDENTIFICAÇÃO -->
-  <div id="tab2" class="tab-content">
-    <div class="section">
-      <h2 class="section-title"><i class="ti ti-pin" style="font-size:18px" aria-hidden="true"></i>Identificação do Local</h2>
-      
-      <div class="form-group">
-        <label class="form-label">Data da vistoria <span class="required">*</span></label>
-        <input type="date" id="data_vistoria">
-      </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.min.js"></script>
+  <script>
+    const formData = {};
+    let uploadedFiles = [];
 
-      <div class="form-group">
-        <label class="form-label">Tipo de infraestrutura <span class="required">*</span></label>
-        <div class="pill-group" style="grid-template-columns: 1fr;">
-          <button class="pill" onclick="selectPill(this, 'tipo_canalizacao')">Canalização</button>
-          <button class="pill" onclick="selectPill(this, 'tipo_hidrico')">Curso hídrico</button>
-          <button class="pill" onclick="selectPill(this, 'tipo_barragem')">Barragem</button>
-          <button class="pill" onclick="selectPill(this, 'tipo_contencao')">Contenção</button>
-          <button class="pill" onclick="selectPill(this, 'tipo_comporta')">Comporta</button>
-          <button class="pill" onclick="selectPill(this, 'tipo_outro')">Outro</button>
-        </div>
-        <input type="text" id="tipo_outro_text" placeholder="Especificar tipo" style="display:none;">
-      </div>
+    function switchTab(index) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-content')[index].classList.add('active');
+      document.querySelectorAll('.tab-btn')[index].classList.add('active');
+      updateProgress();
+    }
 
-      <div class="form-group">
-        <label class="form-label">Nome/localização do local vistoriado <span class="required">*</span></label>
-        <textarea id="localizacao" placeholder="Ex: Rio Piabanha, entre Avenida... e Rua..."></textarea>
-      </div>
+    function selectPill(element, field, value) {
+      const parent = element.parentElement;
+      parent.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      element.classList.add('active');
+      formData[field] = value;
 
-      <div class="form-group">
-        <label class="form-label">Coordenadas geográficas (SIRGAS 2000 - Zona 23K)</label>
-        <input type="text" id="coordenadas" placeholder="Ex: E: 12345678 N: 7654321">
-      </div>
-    </div>
-  </div>
+      if (field === 'motivo' && value === 'Outro') {
+        document.getElementById('motivo_outro').style.display = 'block';
+      } else if (field === 'motivo') {
+        document.getElementById('motivo_outro').style.display = 'none';
+      }
 
-  <!-- TAB 3: AVALIAÇÃO -->
-  <div id="tab3" class="tab-content">
-    <div class="section">
-      <h2 class="section-title"><i class="ti ti-alert-triangle" style="font-size:18px" aria-hidden="true"></i>Avaliação Geral</h2>
-      
-      <div class="form-group">
-        <label class="form-label">Nível de risco geral <span class="required">*</span></label>
-        <div class="pill-group" style="grid-template-columns: repeat(3, 1fr);">
-          <button class="pill" onclick="selectPill(this, 'risco_baixo')">Baixo</button>
-          <button class="pill" onclick="selectPill(this, 'risco_medio')">Médio</button>
-          <button class="pill" onclick="selectPill(this, 'risco_alto')">Alto</button>
-        </div>
-      </div>
+      if (field === 'tipo' && value === 'Outro') {
+        document.getElementById('tipo_outro').style.display = 'block';
+      } else if (field === 'tipo') {
+        document.getElementById('tipo_outro').style.display = 'none';
+      }
 
-      <div class="form-group">
-        <label class="form-label">Prazo para realização do projeto <span class="required">*</span></label>
-        <div class="pill-group" style="grid-template-columns: 1fr;">
-          <button class="pill" onclick="selectPill(this, 'prazo_imediato')">Imediato (até 30 dias)</button>
-          <button class="pill" onclick="selectPill(this, 'prazo_curto')">Curto prazo (até 3 meses)</button>
-          <button class="pill" onclick="selectPill(this, 'prazo_medio')">Médio prazo (até 1 ano)</button>
-          <button class="pill" onclick="selectPill(this, 'prazo_monitoramento')">Monitoramento</button>
-        </div>
-      </div>
-    </div>
-  </div>
+      updateProgress();
+    }
 
-  <!-- TAB 4: FIGURAS E IMAGENS -->
-  <div id="tab4" class="tab-content">
-    <div class="section">
-      <h2 class="section-title"><i class="ti ti-photo" style="font-size:18px" aria-hidden="true"></i>Plantas e Imagens</h2>
-      
-      <div class="form-group">
-        <label class="form-label">Upload de imagens <span class="required">*</span></label>
-        <div class="file-input-wrapper">
-          <label class="file-input-label">
-            <i class="ti ti-cloud-upload" style="font-size:24px; display:block; margin-bottom:8px;" aria-hidden="true"></i>
-            Clique ou arraste imagens aqui
-            <input type="file" id="imagens_upload" multiple accept="image/*" onchange="handleFiles(event)">
-          </label>
-        </div>
-        <div class="file-list" id="fileList"></div>
-      </div>
+    function selectResponsavel(choice) {
+      const pills = document.querySelectorAll('.tab-content')[5].querySelectorAll('.pill');
+      pills.forEach(p => p.classList.remove('active'));
+      event.target.classList.add('active');
 
-      <div class="form-group">
-        <label class="form-label">Análise das figuras</label>
-        <textarea id="figuras_analise" placeholder="FIGURA 1 - [Nome da imagem]&#10;Título: [Título descritivo]&#10;Problemas encontrados: [Descrever anomalias]&#10;Estado estrutural: Bom / Regular / Crítico&#10;Recomendações: [Ações necessárias]&#10;&#10;FIGURA 2 - [Nome da próxima imagem]&#10;..." style="min-height: 200px;"></textarea>
-      </div>
-    </div>
-  </div>
+      if (choice === 'erick') {
+        document.getElementById('engenheiro_nome').value = 'Erick Santana Amâncio';
+        document.getElementById('engenheiro_formacao').value = 'Engenheiro Civil';
+        document.getElementById('engenheiro_crea').value = 'CREA-RJ - 2013138619';
+      } else {
+        document.getElementById('engenheiro_nome').value = '';
+        document.getElementById('engenheiro_formacao').value = '';
+        document.getElementById('engenheiro_crea').value = '';
+      }
+      updateProgress();
+    }
 
-  <!-- TAB 5: CONCLUSÃO -->
-  <div id="tab5" class="tab-content">
-    <div class="section">
-      <h2 class="section-title"><i class="ti ti-check-list" style="font-size:18px" aria-hidden="true"></i>Conclusões e Recomendações</h2>
-      
-      <div class="form-group">
-        <label class="form-label">Conclusão geral da vistoria</label>
-        <textarea id="conclusao_geral" placeholder="Síntese geral dos achados e situação atual da infraestrutura..."></textarea>
-      </div>
+    function handleFiles(event) {
+      uploadedFiles = Array.from(event.target.files);
+      const fileList = document.getElementById('fileList');
+      fileList.innerHTML = '';
 
-      <div class="form-group">
-        <label class="form-label">Recomendações e prazos globais</label>
-        <textarea id="recomendacoes_globais" placeholder="Ações prioritárias, cronograma geral de intervenções, monitoramento necessário..."></textarea>
-      </div>
-    </div>
-  </div>
+      uploadedFiles.forEach((file, idx) => {
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        item.innerHTML = `
+          <span>${file.name}</span>
+          <button onclick="removeFile(${idx})">✕</button>
+        `;
+        fileList.appendChild(item);
+      });
+      updateProgress();
+    }
 
-  <!-- TAB 6: RESPONSÁVEL -->
-  <div id="tab6" class="tab-content">
-    <div class="section">
-      <h2 class="section-title"><i class="ti ti-user-check" style="font-size:18px" aria-hidden="true"></i>Responsável pela Vistoria</h2>
-      
-      <div class="form-group">
-        <label class="form-label">Quem é o responsável? <span class="required">*</span></label>
-        <div class="pill-group" style="grid-template-columns: 1fr;">
-          <button class="pill" onclick="selectPill(this, 'responsavel_erick')">Erick Santana Amâncio</button>
-          <button class="pill" onclick="selectPill(this, 'responsavel_outro')">Outro profissional</button>
-        </div>
-      </div>
+    function removeFile(idx) {
+      uploadedFiles.splice(idx, 1);
+      document.getElementById('imagens').value = '';
+      handleFiles({target: {files: uploadedFiles}});
+    }
 
-      <div class="form-group">
-        <label class="form-label">Nome completo <span class="required">*</span></label>
-        <input type="text" id="engenheiro_nome" placeholder="Nome completo" value="Erick Santana Amâncio">
-      </div>
+    function updateProgress() {
+      const required = ['data_vistoria', 'localizacao', 'tipo', 'risco', 'prazo', 'engenheiro_nome'];
+      const filled = required.filter(field => {
+        if (field === 'tipo' || field === 'risco' || field === 'prazo') {
+          return formData[field];
+        }
+        return document.getElementById(field)?.value?.trim();
+      }).length;
 
-      <div class="form-group">
-        <label class="form-label">Formação/profissão <span class="required">*</span></label>
-        <input type="text" id="engenheiro_formacao" placeholder="Ex: Engenheiro Civil" value="Engenheiro Civil">
-      </div>
+      const progress = Math.round((filled / required.length) * 100);
+      document.getElementById('progressFill').style.width = progress + '%';
+    }
 
-      <div class="form-group">
-        <label class="form-label">CREA <span class="required">*</span></label>
-        <input type="text" id="engenheiro_crea" placeholder="Ex: CREA-RJ - 2013138619" value="CREA-RJ - 2013138619">
-      </div>
-    </div>
-  </div>
+    function salvarRascunho() {
+      const dados = {
+        motivo: formData.motivo || document.querySelector('.tab-content')[0].querySelector('.pill.active')?.textContent,
+        numero_sei: document.getElementById('numero_sei').value,
+        numero_os: document.getElementById('numero_os').value,
+        data_vistoria: document.getElementById('data_vistoria').value,
+        tipo: formData.tipo,
+        localizacao: document.getElementById('localizacao').value,
+        coordenadas: document.getElementById('coordenadas').value,
+        risco: formData.risco,
+        prazo: formData.prazo,
+        engenheiro_nome: document.getElementById('engenheiro_nome').value,
+        engenheiro_crea: document.getElementById('engenheiro_crea').value,
+      };
 
-  <div class="button-group" style="margin-top: 2rem;">
-    <button onclick="saveDraft()">💾 Salvar Rascunho</button>
-    <button class="primary" onclick="submitForm()">✓ Enviar Vistoria</button>
-  </div>
+      localStorage.setItem('vistoria_draft', JSON.stringify(dados));
+      showAlert('✓ Rascunho salvo com sucesso!', 'success');
+    }
 
-  <div id="successMessage"></div>
-</div>
+    function gerarRelatorio() {
+      const data_vistoria = document.getElementById('data_vistoria').value;
+      const localizacao = document.getElementById('localizacao').value;
+      const tipo = formData.tipo;
+      const risco = formData.risco;
+      const prazo = formData.prazo;
 
-<script>
-let formData = {};
-let uploadedFiles = [];
+      if (!data_vistoria || !localizacao) {
+        showAlert('❌ Preencha os campos obrigatórios: Data e Localização', 'error');
+        return;
+      }
 
-function showTab(e, tabName) {
-  e.preventDefault();
-  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-  document.getElementById(tabName).classList.add('active');
-  e.currentTarget.classList.add('active');
-  updateProgress();
-}
+      try {
+        const docx = window.docx;
+        
+        const doc = new docx.Document({
+          sections: [{
+            properties: { page: { margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } },
+            children: [
+              new docx.Paragraph({ text: "RELATÓRIO DE VISTORIA", heading: docx.HeadingLevel.HEADING_1, alignment: docx.AlignmentType.CENTER, spacing: { after: 200 } }),
+              new docx.Paragraph({ text: tipo || "Infraestrutura Hídrica", alignment: docx.AlignmentType.CENTER, spacing: { after: 400 } }),
+              new docx.Paragraph({ text: localizacao, alignment: docx.AlignmentType.CENTER, spacing: { after: 600 } }),
 
-function selectPill(element, id) {
-  const group = element.parentElement;
-  group.querySelectorAll('.pill').forEach(pill => pill.classList.remove('active'));
-  element.classList.add('active');
-  formData[id] = true;
-  
-  if (id === 'motivo_outro') {
-    document.getElementById('motivo_outro_text').style.display = 'block';
-  } else if (id !== 'motivo_outro') {
-    document.getElementById('motivo_outro_text').style.display = 'none';
-  }
-  
-  if (id === 'tipo_outro') {
-    document.getElementById('tipo_outro_text').style.display = 'block';
-  } else if (id !== 'tipo_outro') {
-    document.getElementById('tipo_outro_text').style.display = 'none';
-  }
-  
-  if (id === 'responsavel_outro') {
-    document.getElementById('engenheiro_nome').value = '';
-    document.getElementById('engenheiro_formacao').value = '';
-    document.getElementById('engenheiro_crea').value = '';
-  } else if (id === 'responsavel_erick') {
-    document.getElementById('engenheiro_nome').value = 'Erick Santana Amâncio';
-    document.getElementById('engenheiro_formacao').value = 'Engenheiro Civil';
-    document.getElementById('engenheiro_crea').value = 'CREA-RJ - 2013138619';
-  }
-}
+              new docx.Paragraph({ text: "ÍNDICE", heading: docx.HeadingLevel.HEADING_1, spacing: { after: 200 } }),
+              new docx.Paragraph({ text: "1. INTRODUÇÃO", spacing: { after: 100 } }),
+              new docx.Paragraph({ text: "2. VISTORIA TÉCNICA", spacing: { after: 100 } }),
+              new docx.Paragraph({ text: "3. CONCLUSÃO", spacing: { after: 400 } }),
 
-function handleFiles(event) {
-  const files = Array.from(event.target.files);
-  uploadedFiles = files;
-  
-  const fileList = document.getElementById('fileList');
-  fileList.innerHTML = '';
-  
-  files.forEach((file, index) => {
-    const item = document.createElement('div');
-    item.className = 'file-item';
-    item.innerHTML = `
-      <span><i class="ti ti-photo" style="margin-right:6px;" aria-hidden="true"></i>${file.name}</span>
-      <button onclick="removeFile(${index})" style="background:var(--color-background-danger); color:var(--color-text-danger);">✕</button>
-    `;
-    fileList.appendChild(item);
-  });
-}
+              new docx.Paragraph({ text: "", pageBreakBefore: true }),
 
-function removeFile(index) {
-  uploadedFiles.splice(index, 1);
-  document.getElementById('imagens_upload').value = '';
-  handleFiles({target: {files: uploadedFiles}});
-}
+              new docx.Paragraph({ text: "1. INTRODUÇÃO", heading: docx.HeadingLevel.HEADING_1, spacing: { after: 200 } }),
+              new docx.Paragraph({ 
+                text: `O presente relatório foi elaborado pelo Consórcio Apoio Técnico DIRRAM, em conformidade com o Contrato nº 35/2022, vinculado ao processo administrativo SEI nº 070002/005517/2022${document.getElementById('numero_sei').value ? ` (SEI: ${document.getElementById('numero_sei').value})` : ''}.`,
+                spacing: { after: 200 } 
+              }),
+              new docx.Paragraph({ text: document.getElementById('contexto_detalhado').value || "Vistoria realizada conforme solicitação.", spacing: { after: 400 } }),
 
-function updateProgress() {
-  const fields = document.querySelectorAll('input, textarea, .pill.active');
-  const filled = Array.from(fields).filter(f => {
-    if (f.classList.contains('pill')) return f.classList.contains('active');
-    return f.value.trim() !== '';
-  }).length;
-  const progress = Math.min(90, Math.round((filled / 15) * 100));
-  document.getElementById('progressFill').style.width = progress + '%';
-}
+              new docx.Paragraph({ text: "Informações da Vistoria", heading: docx.HeadingLevel.HEADING_2, spacing: { after: 200 } }),
 
-function saveDraft() {
-  const data = {
-    numero_sei: document.getElementById('numero_sei').value,
-    numero_os: document.getElementById('numero_os').value,
-    contexto: document.getElementById('contexto_detalhado').value,
-    data: document.getElementById('data_vistoria').value,
-    localizacao: document.getElementById('localizacao').value,
-    coordenadas: document.getElementById('coordenadas').value,
-    figuras: document.getElementById('figuras_analise').value,
-    conclusao: document.getElementById('conclusao_geral').value,
-    recomendacoes: document.getElementById('recomendacoes_globais').value,
-    engenheiro: document.getElementById('engenheiro_nome').value,
-    files: uploadedFiles.length
-  };
-  localStorage.setItem('vistoria_draft', JSON.stringify(data));
-  alert('Rascunho salvo com sucesso!');
-}
+              new docx.Table({
+                width: { size: 9360, type: docx.WidthType.DXA },
+                rows: [
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({ borders: { top: { style: docx.BorderStyle.SINGLE }, bottom: { style: docx.BorderStyle.SINGLE }, left: { style: docx.BorderStyle.SINGLE }, right: { style: docx.BorderStyle.SINGLE } }, shading: { fill: "D5E8F0", type: docx.ShadingType.CLEAR }, children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "Data", bold: true })] })] }),
+                      new docx.TableCell({ borders: { top: { style: docx.BorderStyle.SINGLE }, bottom: { style: docx.BorderStyle.SINGLE }, left: { style: docx.BorderStyle.SINGLE }, right: { style: docx.BorderStyle.SINGLE } }, children: [new docx.Paragraph({ text: data_vistoria })] })
+                    ]
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({ borders: { top: { style: docx.BorderStyle.SINGLE }, bottom: { style: docx.BorderStyle.SINGLE }, left: { style: docx.BorderStyle.SINGLE }, right: { style: docx.BorderStyle.SINGLE } }, shading: { fill: "D5E8F0", type: docx.ShadingType.CLEAR }, children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "Tipo", bold: true })] })] }),
+                      new docx.TableCell({ borders: { top: { style: docx.BorderStyle.SINGLE }, bottom: { style: docx.BorderStyle.SINGLE }, left: { style: docx.BorderStyle.SINGLE }, right: { style: docx.BorderStyle.SINGLE } }, children: [new docx.Paragraph({ text: tipo || "Não especificado" })] })
+                    ]
+                  }),
+                  new docx.TableRow({
+                    children: [
+                      new docx.TableCell({ borders: { top: { style: docx.BorderStyle.SINGLE }, bottom: { style: docx.BorderStyle.SINGLE }, left: { style: docx.BorderStyle.SINGLE }, right: { style: docx.BorderStyle.SINGLE } }, shading: { fill: "D5E8F0", type: docx.ShadingType.CLEAR }, children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "Risco", bold: true })] })] }),
+                      new docx.TableCell({ borders: { top: { style: docx.BorderStyle.SINGLE }, bottom: { style: docx.BorderStyle.SINGLE }, left: { style: docx.BorderStyle.SINGLE }, right: { style: docx.BorderStyle.SINGLE } }, children: [new docx.Paragraph({ text: risco || "Não especificado" })] })
+                    ]
+                  })
+                ]
+              }),
 
-function submitForm() {
-  const data = {
-    numero_sei: document.getElementById('numero_sei').value,
-    data_vistoria: document.getElementById('data_vistoria').value,
-    localizacao: document.getElementById('localizacao').value,
-    engenheiro: document.getElementById('engenheiro_nome').value,
-    files_count: uploadedFiles.length
-  };
-  
-  if (!data.data_vistoria || !data.localizacao) {
-    alert('Por favor, preencha os campos obrigatórios: Data e Localização');
-    return;
-  }
-  
-  const summary = `
-Vistoria submetida com sucesso!
+              new docx.Paragraph({ text: "", spacing: { after: 400 } }),
+              new docx.Paragraph({ text: "", pageBreakBefore: true }),
 
-📅 Data: ${data.data_vistoria}
-📍 Local: ${data.localizacao}
-👨‍💼 Responsável: ${data.engenheiro}
-📷 Imagens: ${data.files_count}
+              new docx.Paragraph({ text: "2. VISTORIA TÉCNICA", heading: docx.HeadingLevel.HEADING_1, spacing: { after: 200 } }),
+              new docx.Paragraph({ text: "Análise de Figuras", heading: docx.HeadingLevel.HEADING_2, spacing: { after: 200 } }),
+              new docx.Paragraph({ text: document.getElementById('figuras_analise').value || "Figuras foram analisadas conforme descrito acima.", spacing: { after: 400 } }),
 
-Os dados foram capturados e estão prontos para gerar o relatório em Word.
-  `;
-  
-  document.getElementById('progressFill').style.width = '100%';
-  const msg = document.getElementById('successMessage');
-  msg.innerHTML = `<div class="success-message">${summary.trim()}</div>`;
-  
-  setTimeout(() => {
-    sendPrompt('Gerar relatório em Word com os dados coletados da vistoria');
-  }, 1500);
-}
+              new docx.Paragraph({ text: "", pageBreakBefore: true }),
 
-document.addEventListener('input', updateProgress);
-</script>
+              new docx.Paragraph({ text: "3. CONCLUSÃO", heading: docx.HeadingLevel.HEADING_1, spacing: { after: 200 } }),
+              new docx.Paragraph({ text: document.getElementById('conclusao_geral').value || "A vistoria foi realizada conforme planejado.", spacing: { after: 400 } }),
+
+              new docx.Paragraph({ text: "Recomendações", heading: docx.HeadingLevel.HEADING_2, spacing: { after: 200 } }),
+              new docx.Paragraph({ text: document.getElementById('recomendacoes_globais').value || "As recomendações foram delineadas conforme análise.", spacing: { after: 600 } }),
+
+              new docx.Paragraph({ text: "", spacing: { after: 400 } }),
+              new docx.Paragraph({ text: new Date().toLocaleDateString('pt-BR'), spacing: { after: 600 } }),
+              new docx.Paragraph({ text: "_".repeat(50), spacing: { after: 100 } }),
+              new docx.Paragraph({ text: document.getElementById('engenheiro_nome').value || "Erick Santana Amâncio", spacing: { after: 50 } }),
+              new docx.Paragraph({ text: document.getElementById('engenheiro_formacao').value || "Engenheiro Civil", spacing: { after: 50 } }),
+              new docx.Paragraph({ text: document.getElementById('engenheiro_crea').value || "CREA-RJ - 2013138619" })
+            ]
+          }]
+        });
+
+        docx.Packer.toBlob(doc).then(blob => {
+          saveAs(blob, `RELATORIO_VISTORIA_${data_vistoria}.docx`);
+          showAlert('✓ Relatório gerado com sucesso! Download iniciado.', 'success');
+        });
+      } catch (error) {
+        showAlert('❌ Erro ao gerar relatório: ' + error.message, 'error');
+      }
+    }
+
+    function showAlert(message, type) {
+      const box = document.getElementById('alertBox');
+      box.textContent = message;
+      box.className = 'alert ' + type + ' show';
+      setTimeout(() => box.classList.remove('show'), 5000);
+    }
+
+    window.onload = () => {
+      const draft = localStorage.getItem('vistoria_draft');
+      if (draft) {
+        console.log('Rascunho carregado');
+      }
+    };
+  </script>
+</body>
+</html>
