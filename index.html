@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vistoria Hídrica INEA</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
@@ -85,9 +87,6 @@
       gap: 8px;
       margin-bottom: 1.5rem;
     }
-    .pill-group.grid-2 {
-      grid-template-columns: repeat(2, 1fr);
-    }
     .pill-group.grid-3 {
       grid-template-columns: repeat(3, 1fr);
     }
@@ -127,49 +126,33 @@
     .file-upload input[type="file"] {
       display: none;
     }
-    .file-list {
-      margin-top: 1rem;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-    .file-item {
-      background: #f0f7ff;
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .file-item button {
-      background: none;
-      border: none;
-      color: #e74c3c;
-      cursor: pointer;
-      font-weight: bold;
-      padding: 0;
-    }
-    .figura-card {
+    .imagem-card {
       background: #f9f9f9;
       border: 1px solid #e0e0e0;
       border-radius: 8px;
       padding: 1.5rem;
       margin-bottom: 1.5rem;
-      position: relative;
     }
-    .figura-card .header-figura {
+    .imagem-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 1rem;
     }
-    .figura-card h4 {
+    .imagem-header h4 {
       margin: 0;
       color: #333;
       font-size: 16px;
     }
-    .figura-card .btn-remover {
+    .imagem-preview {
+      width: 100%;
+      max-height: 200px;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      object-fit: cover;
+      border: 1px solid #ddd;
+    }
+    .btn-remover {
       background: #e74c3c;
       color: white;
       border: none;
@@ -179,7 +162,7 @@
       font-size: 12px;
       font-weight: 600;
     }
-    .figura-card .btn-remover:hover {
+    .btn-remover:hover {
       background: #c0392b;
     }
     .button-group {
@@ -210,6 +193,13 @@
     }
     .btn-secondary:hover {
       background: #ddd;
+    }
+    .btn-success {
+      background: #27ae60;
+      color: white;
+    }
+    .btn-success:hover {
+      background: #229954;
     }
     button:disabled {
       opacity: 0.5;
@@ -246,12 +236,31 @@
       color: #721c24;
       border: 1px solid #f5c6cb;
     }
+    .alert.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
     .alert.show { display: block; }
     @keyframes slideIn {
       from { opacity: 0; transform: translateY(-10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    .hidden { display: none; }
+    .divider {
+      border-top: 2px solid #eee;
+      margin: 2rem 0;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 1rem;
+    }
+    .button-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
   </style>
 </head>
 <body>
@@ -275,6 +284,8 @@
 
       <!-- TAB 0: CONTEXTO -->
       <div class="tab-content active">
+        <div class="section-title">📄 Contexto da Vistoria</div>
+        
         <div class="form-group">
           <label>O que motivou esta vistoria? <span class="required">*</span></label>
           <div class="pill-group">
@@ -357,21 +368,32 @@
 
       <!-- TAB 3: FIGURAS -->
       <div class="tab-content">
+        <div class="section-title">🗺️ Figura 1 - Planta de Localização</div>
+        
         <div class="form-group">
-          <label>Upload de imagens</label>
+          <label>Upload da planta de localização</label>
+          <div class="file-upload" onclick="document.getElementById('figura1_imagem').click()">
+            <div>📸 Clique ou arraste a imagem aqui</div>
+            <div style="font-size: 12px; color: #999; margin-top: 0.5rem;">PNG, JPG, GIF</div>
+            <input type="file" id="figura1_imagem" accept="image/*" onchange="handleFigura1Upload(event)">
+          </div>
+          <div id="figura1Container"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="section-title">📸 Figura 2 em Diante</div>
+        
+        <div class="form-group">
+          <label>Upload de imagens adicionais</label>
           <div class="file-upload" onclick="document.getElementById('imagens').click()">
-            <div>📸 Clique ou arraste imagens aqui</div>
+            <div>📸 Clique ou arraste as imagens aqui</div>
             <div style="font-size: 12px; color: #999; margin-top: 0.5rem;">PNG, JPG, GIF</div>
             <input type="file" id="imagens" multiple accept="image/*" onchange="handleFiles(event)">
           </div>
-          <div class="file-list" id="fileList"></div>
         </div>
 
-        <div class="form-group">
-          <label>Análise individual de cada figura</label>
-          <div id="figurasContainer"></div>
-          <button type="button" class="btn-secondary" style="margin-top: 1rem;" onclick="adicionarFigura()">➕ Adicionar Nova Figura</button>
-        </div>
+        <div id="imagensContainer"></div>
       </div>
 
       <!-- TAB 4: CONCLUSÃO -->
@@ -413,16 +435,32 @@
         </div>
       </div>
 
-      <div class="button-group">
+      <div class="button-row">
         <button class="btn-secondary" onclick="salvarRascunho()">💾 Salvar Rascunho</button>
-        <button class="btn-primary" onclick="gerarRelatorio()">📥 Gerar Relatório Word</button>
+        <button class="btn-primary" onclick="exportarZIP()">📦 Exportar ZIP (Python)</button>
+        <button class="btn-success" onclick="gerarRelatorioDireto()">📥 Gerar Word (Beta)</button>
       </div>
 
       <div class="alert" id="alertBox"></div>
+
+      <!-- Modal para servidor Python -->
+      <div id="pythonModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+        <div style="background: white; margin: 5% auto; padding: 2rem; border-radius: 8px; max-width: 500px;">
+          <h2>🐍 Executar via Python Local</h2>
+          <p>Para gerar um relatório profissional com IA, você precisa:</p>
+          <ol>
+            <li>Extrair o ZIP gerado acima</li>
+            <li>Ter Python instalado</li>
+            <li>Executar: <code>python gerar_relatorio.py</code></li>
+          </ol>
+          <p><strong>Instruções:</strong> Consulte GUIA_PYTHON.md</p>
+          <button class="btn-primary" onclick="fecharModal()">Entendido</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Carregando docx via importmap -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.min.js"></script>
   <script type="importmap">
     {
       "imports": {
@@ -434,13 +472,11 @@
   <script type="module">
     import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, HeadingLevel, AlignmentType, WidthType, BorderStyle } from 'docx';
     
-    // Exportar funções globais
     window.docxLib = { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, HeadingLevel, AlignmentType, WidthType, BorderStyle };
 
     const formData = {};
-    let uploadedFiles = [];
-    let figuras = [];
-    let contador_figuras = 0;
+    let figura1 = null;
+    let imagens = [];
 
     window.switchTab = function(index) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -488,108 +524,206 @@
       updateProgress();
     };
 
-    window.handleFiles = function(event) {
-      uploadedFiles = Array.from(event.target.files);
-      const fileList = document.getElementById('fileList');
-      fileList.innerHTML = '';
+    window.handleFigura1Upload = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
 
-      uploadedFiles.forEach((file, idx) => {
-        const item = document.createElement('div');
-        item.className = 'file-item';
-        item.innerHTML = `
-          <span>${file.name}</span>
-          <button onclick="removeFile(${idx})">✕</button>
-        `;
-        fileList.appendChild(item);
-      });
-      updateProgress();
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        figura1 = {
+          id: 'figura1',
+          numero: 1,
+          nome: "Planta de Localização",
+          titulo: '',
+          problemas: '',
+          estado: '',
+          recomendacoes: '',
+          preview: e.target.result,
+          nomeArquivo: file.name
+        };
+        renderizarFigura1();
+      };
+      reader.readAsDataURL(file);
     };
 
-    window.removeFile = function(idx) {
-      uploadedFiles.splice(idx, 1);
-      document.getElementById('imagens').value = '';
-      handleFiles({target: {files: uploadedFiles}});
-    };
+    function renderizarFigura1() {
+      const container = document.getElementById('figura1Container');
+      container.innerHTML = '';
 
-    window.adicionarFigura = function() {
-      contador_figuras++;
-      const figuraId = `figura_${contador_figuras}`;
-      
-      const container = document.getElementById('figurasContainer');
-      const figuraCard = document.createElement('div');
-      figuraCard.className = 'figura-card';
-      figuraCard.id = figuraId;
-      figuraCard.innerHTML = `
-        <div class="header-figura">
-          <h4>Figura ${contador_figuras}</h4>
-          <button type="button" class="btn-remover" onclick="removerFigura('${figuraId}')">✕ Remover</button>
-        </div>
-        
-        <div class="form-group">
-          <label>Nome da imagem</label>
-          <input type="text" class="figura-nome" placeholder="Ex: Planta de Localização" onchange="updateProgress()">
+      const card = document.createElement('div');
+      card.className = 'imagem-card';
+      card.innerHTML = `
+        <div class="imagem-header">
+          <h4>Figura 1</h4>
+          <button type="button" class="btn-remover" onclick="removerFigura1()">✕ Remover</button>
         </div>
 
+        <img src="${figura1.preview}" alt="Preview" class="imagem-preview">
+
         <div class="form-group">
-          <label>Título/descrição breve</label>
-          <input type="text" class="figura-titulo" placeholder="Ex: Mapa de delimitação da área vistoriada" onchange="updateProgress()">
+          <label>Título/descrição da planta <span class="required">*</span></label>
+          <input type="text" class="fig1-titulo" placeholder="Ex: Mapa de delimitação da área vistoriada" onchange="atualizarFigura1('titulo', this.value)" value="${figura1.titulo}">
         </div>
 
         <div class="form-group">
           <label>Problemas encontrados</label>
-          <textarea class="figura-problemas" placeholder="Descrever anomalias, danos, erosão, etc." onchange="updateProgress()"></textarea>
+          <textarea class="fig1-problemas" placeholder="Descrever anomalias, danos, erosão, etc." onchange="atualizarFigura1('problemas', this.value)">${figura1.problemas}</textarea>
         </div>
 
         <div class="form-group">
           <label>Estado estrutural</label>
           <div class="pill-group grid-3">
-            <button type="button" class="pill" onclick="selectFiguraPill(this, '${figuraId}', 'estado', 'Bom')">Bom</button>
-            <button type="button" class="pill" onclick="selectFiguraPill(this, '${figuraId}', 'estado', 'Regular')">Regular</button>
-            <button type="button" class="pill" onclick="selectFiguraPill(this, '${figuraId}', 'estado', 'Crítico')">Crítico</button>
+            <button type="button" class="pill" onclick="selecionarEstadoFigura1('Bom', this)">Bom</button>
+            <button type="button" class="pill" onclick="selecionarEstadoFigura1('Regular', this)">Regular</button>
+            <button type="button" class="pill" onclick="selecionarEstadoFigura1('Crítico', this)">Crítico</button>
           </div>
         </div>
 
         <div class="form-group">
-          <label>Recomendações para esta figura</label>
-          <textarea class="figura-recomendacoes" placeholder="Ações necessárias para esta figura" onchange="updateProgress()"></textarea>
+          <label>Recomendações</label>
+          <textarea class="fig1-recomendacoes" placeholder="Ações necessárias para esta figura" onchange="atualizarFigura1('recomendacoes', this.value)">${figura1.recomendacoes}</textarea>
         </div>
       `;
-      
-      container.appendChild(figuraCard);
+
+      container.appendChild(card);
+      updateProgress();
+    }
+
+    window.removerFigura1 = function() {
+      figura1 = null;
+      document.getElementById('figura1_imagem').value = '';
+      document.getElementById('figura1Container').innerHTML = '';
       updateProgress();
     };
 
-    window.removerFigura = function(figuraId) {
-      document.getElementById(figuraId).remove();
-      updateProgress();
+    window.atualizarFigura1 = function(campo, valor) {
+      if (figura1) {
+        figura1[campo] = valor;
+      }
     };
 
-    window.selectFiguraPill = function(element, figuraId, field, value) {
-      const parent = element.parentElement;
-      parent.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+    window.selecionarEstadoFigura1 = function(estado, element) {
+      const container = element.closest('.form-group');
+      container.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
       element.classList.add('active');
+      atualizarFigura1('estado', estado);
+    };
+
+    window.handleFiles = function(event) {
+      const files = Array.from(event.target.files);
+      imagens = [];
+
+      files.forEach((file, idx) => {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          imagens.push({
+            id: `imagem_${Date.now()}_${idx}`,
+            numero: idx + 2,
+            titulo: '',
+            problemas: '',
+            estado: '',
+            recomendacoes: '',
+            preview: e.target.result,
+            nome: file.name
+          });
+
+          if (imagens.length === files.length) {
+            renderizarImagens();
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    };
+
+    function renderizarImagens() {
+      const container = document.getElementById('imagensContainer');
+      container.innerHTML = '';
+
+      imagens.forEach((img, idx) => {
+        const card = document.createElement('div');
+        card.className = 'imagem-card';
+        card.id = img.id;
+        card.innerHTML = `
+          <div class="imagem-header">
+            <h4>Figura ${img.numero}</h4>
+            <button type="button" class="btn-remover" onclick="removerImagem('${img.id}')">✕ Remover</button>
+          </div>
+
+          <img src="${img.preview}" alt="Preview" class="imagem-preview">
+
+          <div class="form-group">
+            <label>Título/descrição da figura <span class="required">*</span></label>
+            <input type="text" class="img-titulo" placeholder="Ex: Erosão de margem no km 15" onchange="atualizarImagem('${img.id}', 'titulo', this.value)" value="${img.titulo}">
+          </div>
+
+          <div class="form-group">
+            <label>Problemas encontrados</label>
+            <textarea class="img-problemas" placeholder="Descrever anomalias, danos, erosão, etc." onchange="atualizarImagem('${img.id}', 'problemas', this.value)">${img.problemas}</textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Estado estrutural</label>
+            <div class="pill-group grid-3">
+              <button type="button" class="pill" onclick="selecionarEstado('${img.id}', 'Bom', this)">Bom</button>
+              <button type="button" class="pill" onclick="selecionarEstado('${img.id}', 'Regular', this)">Regular</button>
+              <button type="button" class="pill" onclick="selecionarEstado('${img.id}', 'Crítico', this)">Crítico</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Recomendações</label>
+            <textarea class="img-recomendacoes" placeholder="Ações necessárias para esta figura" onchange="atualizarImagem('${img.id}', 'recomendacoes', this.value)">${img.recomendacoes}</textarea>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+
       updateProgress();
+    }
+
+    window.removerImagem = function(id) {
+      imagens = imagens.filter(img => img.id !== id);
+      renderizarImagens();
+    };
+
+    window.atualizarImagem = function(id, campo, valor) {
+      const img = imagens.find(i => i.id === id);
+      if (img) {
+        img[campo] = valor;
+      }
+    };
+
+    window.selecionarEstado = function(id, estado, element) {
+      const card = element.closest('.imagem-card');
+      card.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      element.classList.add('active');
+      atualizarImagem(id, 'estado', estado);
     };
 
     function coletarFiguras() {
       const figurasColetadas = [];
-      const cards = document.querySelectorAll('.figura-card');
       
-      cards.forEach((card, idx) => {
-        const nome = card.querySelector('.figura-nome').value;
-        const titulo = card.querySelector('.figura-titulo').value;
-        const problemas = card.querySelector('.figura-problemas').value;
-        const estado = card.querySelector('.pill.active')?.textContent || '';
-        const recomendacoes = card.querySelector('.figura-recomendacoes').value;
-        
-        if (nome || titulo || problemas || estado || recomendacoes) {
+      if (figura1 && figura1.titulo) {
+        figurasColetadas.push({
+          numero: 1,
+          nome: figura1.nome,
+          titulo: figura1.titulo,
+          problemas: figura1.problemas,
+          estado: figura1.estado,
+          recomendacoes: figura1.recomendacoes
+        });
+      }
+      
+      imagens.forEach(img => {
+        if (img.titulo) {
           figurasColetadas.push({
-            numero: idx + 1,
-            nome: nome,
-            titulo: titulo,
-            problemas: problemas,
-            estado: estado.trim(),
-            recomendacoes: recomendacoes
+            numero: img.numero,
+            nome: img.nome.split('.')[0],
+            titulo: img.titulo,
+            problemas: img.problemas,
+            estado: img.estado,
+            recomendacoes: img.recomendacoes
           });
         }
       });
@@ -634,7 +768,73 @@
       showAlert('✓ Rascunho salvo com sucesso!', 'success');
     };
 
-    window.gerarRelatorio = function() {
+    window.exportarZIP = async function() {
+      const data_vistoria = document.getElementById('data_vistoria').value;
+      const localizacao = document.getElementById('localizacao').value;
+
+      if (!data_vistoria || !localizacao) {
+        showAlert('❌ Preencha os campos obrigatórios: Data e Localização', 'error');
+        return;
+      }
+
+      if (!figura1 || !figura1.titulo) {
+        showAlert('❌ Faça upload e preencha o título da Figura 1', 'error');
+        return;
+      }
+
+      try {
+        const JSZip = window.JSZip;
+        const zip = new JSZip();
+
+        // Dados em JSON
+        const figurasColetadas = coletarFiguras();
+        const dados = {
+          motivo: formData.motivo,
+          numero_sei: document.getElementById('numero_sei').value,
+          numero_os: document.getElementById('numero_os').value,
+          data_vistoria: document.getElementById('data_vistoria').value,
+          tipo: formData.tipo,
+          localizacao: document.getElementById('localizacao').value,
+          coordenadas: document.getElementById('coordenadas').value,
+          risco: formData.risco,
+          prazo: formData.prazo,
+          contexto: document.getElementById('contexto_detalhado').value,
+          figuras: figurasColetadas,
+          conclusao: document.getElementById('conclusao_geral').value,
+          recomendacoes: document.getElementById('recomendacoes_globais').value,
+          engenheiro_nome: document.getElementById('engenheiro_nome').value,
+          engenheiro_formacao: document.getElementById('engenheiro_formacao').value,
+          engenheiro_crea: document.getElementById('engenheiro_crea').value,
+        };
+
+        zip.file('dados.json', JSON.stringify(dados, null, 2));
+
+        // Adicionar imagens
+        if (figura1 && figura1.preview) {
+          const base64 = figura1.preview.split(',')[1];
+          zip.file('imagens/figura_1.jpg', base64, { base64: true });
+        }
+
+        imagens.forEach((img, idx) => {
+          if (img.preview) {
+            const base64 = img.preview.split(',')[1];
+            const nomeArquivo = img.nome.split('.')[0];
+            zip.file(`imagens/${nomeArquivo}.jpg`, base64, { base64: true });
+          }
+        });
+
+        // Gerar e baixar ZIP
+        const blob = await zip.generateAsync({ type: 'blob' });
+        saveAs(blob, `vistoria_${data_vistoria}.zip`);
+        
+        showAlert('✅ ZIP exportado com sucesso! Agora execute: python gerar_relatorio.py', 'success');
+      } catch (error) {
+        console.error('Erro:', error);
+        showAlert('❌ Erro ao exportar ZIP: ' + error.message, 'error');
+      }
+    };
+
+    window.gerarRelatorioDireto = async function() {
       const data_vistoria = document.getElementById('data_vistoria').value;
       const localizacao = document.getElementById('localizacao').value;
       const tipo = formData.tipo;
@@ -645,21 +845,24 @@
         return;
       }
 
+      if (!figura1 || !figura1.titulo) {
+        showAlert('❌ Faça upload e preencha o título da Figura 1', 'error');
+        return;
+      }
+
       try {
         const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, HeadingLevel, AlignmentType, WidthType, BorderStyle } = window.docxLib;
         const figurasColetadas = coletarFiguras();
         
-        // Construir texto de análise de figuras
         let analiseFiguras = '';
         figurasColetadas.forEach(fig => {
           analiseFiguras += `\n\nFIGURA ${fig.numero} - ${fig.nome}\n`;
           analiseFiguras += `Título: ${fig.titulo}\n`;
-          analiseFiguras += `Problemas encontrados: ${fig.problemas}\n`;
-          analiseFiguras += `Estado estrutural: ${fig.estado}\n`;
-          analiseFiguras += `Recomendações: ${fig.recomendacoes}`;
+          if (fig.problemas) analiseFiguras += `Problemas encontrados: ${fig.problemas}\n`;
+          if (fig.estado) analiseFiguras += `Estado estrutural: ${fig.estado}\n`;
+          if (fig.recomendacoes) analiseFiguras += `Recomendações: ${fig.recomendacoes}`;
         });
 
-        // Construir texto de introdução
         let textoIntroducao = `O presente relatório foi elaborado pelo Consórcio Apoio Técnico DIRRAM, em conformidade com o Contrato nº 35/2022, vinculado ao processo administrativo SEI nº 070002/005517/2022`;
         
         if (formData.motivo) {
@@ -698,71 +901,36 @@
               new Paragraph({ text: "1. INTRODUÇÃO", heading: HeadingLevel.HEADING_1, spacing: { after: 200 } }),
               new Paragraph({ text: textoIntroducao, spacing: { after: 400 } }),
 
-              new Paragraph({ text: "Informações da Vistoria", heading: HeadingLevel.HEADING_2, spacing: { after: 200 } }),
-
-              new Table({
-                width: { size: 9360, type: WidthType.DXA },
-                rows: [
-                  new TableRow({
-                    children: [
-                      new TableCell({ borders: { top: { style: BorderStyle.SINGLE }, bottom: { style: BorderStyle.SINGLE }, left: { style: BorderStyle.SINGLE }, right: { style: BorderStyle.SINGLE } }, shading: { fill: "D5E8F0", type: "clear" }, children: [new Paragraph({ children: [new TextRun({ text: "Data", bold: true })] })] }),
-                      new TableCell({ borders: { top: { style: BorderStyle.SINGLE }, bottom: { style: BorderStyle.SINGLE }, left: { style: BorderStyle.SINGLE }, right: { style: BorderStyle.SINGLE } }, children: [new Paragraph({ text: data_vistoria })] })
-                    ]
-                  }),
-                  new TableRow({
-                    children: [
-                      new TableCell({ borders: { top: { style: BorderStyle.SINGLE }, bottom: { style: BorderStyle.SINGLE }, left: { style: BorderStyle.SINGLE }, right: { style: BorderStyle.SINGLE } }, shading: { fill: "D5E8F0", type: "clear" }, children: [new Paragraph({ children: [new TextRun({ text: "Tipo", bold: true })] })] }),
-                      new TableCell({ borders: { top: { style: BorderStyle.SINGLE }, bottom: { style: BorderStyle.SINGLE }, left: { style: BorderStyle.SINGLE }, right: { style: BorderStyle.SINGLE } }, children: [new Paragraph({ text: tipo || "Não especificado" })] })
-                    ]
-                  }),
-                  new TableRow({
-                    children: [
-                      new TableCell({ borders: { top: { style: BorderStyle.SINGLE }, bottom: { style: BorderStyle.SINGLE }, left: { style: BorderStyle.SINGLE }, right: { style: BorderStyle.SINGLE } }, shading: { fill: "D5E8F0", type: "clear" }, children: [new Paragraph({ children: [new TextRun({ text: "Risco", bold: true })] })] }),
-                      new TableCell({ borders: { top: { style: BorderStyle.SINGLE }, bottom: { style: BorderStyle.SINGLE }, left: { style: BorderStyle.SINGLE }, right: { style: BorderStyle.SINGLE } }, children: [new Paragraph({ text: risco || "Não especificado" })] })
-                    ]
-                  })
-                ]
-              }),
-
-              new Paragraph({ text: "", spacing: { after: 400 } }),
               new Paragraph({ text: "", pageBreakBefore: true }),
 
               new Paragraph({ text: "2. VISTORIA TÉCNICA", heading: HeadingLevel.HEADING_1, spacing: { after: 200 } }),
-              new Paragraph({ text: "Análise de Figuras", heading: HeadingLevel.HEADING_2, spacing: { after: 200 } }),
-              new Paragraph({ text: analiseFiguras || "Figuras foram analisadas conforme descrito acima.", spacing: { after: 400 } }),
+              new Paragraph({ text: analiseFiguras || "Figuras foram analisadas.", spacing: { after: 400 } }),
 
               new Paragraph({ text: "", pageBreakBefore: true }),
 
               new Paragraph({ text: "3. CONCLUSÃO", heading: HeadingLevel.HEADING_1, spacing: { after: 200 } }),
-              new Paragraph({ text: document.getElementById('conclusao_geral').value || "A vistoria foi realizada conforme planejado.", spacing: { after: 400 } }),
+              new Paragraph({ text: document.getElementById('conclusao_geral').value || "Relatório concluído.", spacing: { after: 400 } }),
 
               new Paragraph({ text: "Recomendações", heading: HeadingLevel.HEADING_2, spacing: { after: 200 } }),
-              new Paragraph({ text: document.getElementById('recomendacoes_globais').value || "As recomendações foram delineadas conforme análise.", spacing: { after: 600 } }),
+              new Paragraph({ text: document.getElementById('recomendacoes_globais').value || "Recomendações delineadas.", spacing: { after: 600 } }),
 
               new Paragraph({ text: "", spacing: { after: 400 } }),
               new Paragraph({ text: new Date().toLocaleDateString('pt-BR'), spacing: { after: 600 } }),
               new Paragraph({ text: "_".repeat(50), spacing: { after: 100 } }),
-              new Paragraph({ text: document.getElementById('engenheiro_nome').value || "Erick Santana Amâncio", spacing: { after: 50 } }),
-              new Paragraph({ text: document.getElementById('engenheiro_formacao').value || "Engenheiro Civil", spacing: { after: 50 } }),
-              new Paragraph({ text: document.getElementById('engenheiro_crea').value || "CREA-RJ - 2013138619" })
+              new Paragraph({ text: document.getElementById('engenheiro_nome').value, spacing: { after: 50 } }),
+              new Paragraph({ text: document.getElementById('engenheiro_formacao').value, spacing: { after: 50 } }),
+              new Paragraph({ text: document.getElementById('engenheiro_crea').value })
             ]
           }]
         });
 
         Packer.toBlob(doc).then(blob => {
-          const url = window.URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `RELATORIO_VISTORIA_${data_vistoria}.docx`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          window.URL.revokeObjectURL(url);
-          showAlert('✓ Relatório gerado com sucesso! Download iniciado.', 'success');
+          saveAs(blob, `RELATORIO_VISTORIA_${data_vistoria}.docx`);
+          showAlert('✓ Relatório gerado (versão básica)! Para versão com IA, use o botão ZIP.', 'success');
         });
       } catch (error) {
-        console.error('Erro detalhado:', error);
-        showAlert('❌ Erro ao gerar relatório: ' + error.message, 'error');
+        console.error('Erro:', error);
+        showAlert('❌ Erro ao gerar: ' + error.message, 'error');
       }
     };
 
@@ -773,11 +941,11 @@
       setTimeout(() => box.classList.remove('show'), 5000);
     }
 
-    window.updateProgress = updateProgress;
-
-    window.onload = () => {
-      adicionarFigura();
+    window.fecharModal = function() {
+      document.getElementById('pythonModal').style.display = 'none';
     };
+
+    window.updateProgress = updateProgress;
   </script>
 </body>
 </html>
