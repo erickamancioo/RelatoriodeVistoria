@@ -4,8 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vistoria Hídrica INEA</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <style>
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
@@ -36,6 +34,7 @@
       color: #666;
       border-bottom: 3px solid transparent;
       transition: all 0.2s;
+      white-space: nowrap;
     }
     .tab-btn:hover { color: #0066cc; }
     .tab-btn.active { 
@@ -78,7 +77,7 @@
     }
     textarea { 
       resize: vertical; 
-      min-height: 100px;
+      min-height: 80px;
     }
     .pill-group {
       display: grid;
@@ -151,6 +150,38 @@
       font-weight: bold;
       padding: 0;
     }
+    .figura-card {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+    .figura-card .header-figura {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .figura-card h4 {
+      margin: 0;
+      color: #333;
+      font-size: 16px;
+    }
+    .figura-card .btn-remover {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .figura-card .btn-remover:hover {
+      background: #c0392b;
+    }
     .button-group {
       display: flex;
       gap: 12px;
@@ -221,11 +252,6 @@
       to { opacity: 1; transform: translateY(0); }
     }
     .hidden { display: none; }
-    .section-subtitle {
-      font-size: 12px;
-      color: #666;
-      margin-top: 0.25rem;
-    }
   </style>
 </head>
 <body>
@@ -257,7 +283,7 @@
             <button class="pill" onclick="selectPill(this, 'motivo', 'Solicitação da Diretoria')">Solicitação da Diretoria</button>
             <button class="pill" onclick="selectPill(this, 'motivo', 'Outro')">Outro</button>
           </div>
-          <input type="text" id="motivo_outro" placeholder="Especificar outro motivo" class="hidden" style="display: none;">
+          <input type="text" id="motivo_outro" placeholder="Especificar outro motivo" style="display: none;">
         </div>
 
         <div class="form-group">
@@ -293,7 +319,7 @@
             <button class="pill" onclick="selectPill(this, 'tipo', 'Comporta')">Comporta</button>
             <button class="pill" onclick="selectPill(this, 'tipo', 'Outro')">Outro</button>
           </div>
-          <input type="text" id="tipo_outro" placeholder="Especificar tipo" class="hidden" style="display: none;">
+          <input type="text" id="tipo_outro" placeholder="Especificar tipo" style="display: none;">
         </div>
 
         <div class="form-group">
@@ -342,8 +368,9 @@
         </div>
 
         <div class="form-group">
-          <label>Análise das figuras</label>
-          <textarea id="figuras_analise" placeholder="FIGURA 1 - [Nome da imagem]&#10;Título: [Título descritivo]&#10;Problemas encontrados: [Descrever anomalias]&#10;Estado estrutural: Bom / Regular / Crítico&#10;Recomendações: [Ações necessárias]&#10;&#10;FIGURA 2 - ..." style="min-height: 200px;"></textarea>
+          <label>Análise individual de cada figura</label>
+          <div id="figurasContainer"></div>
+          <button type="button" class="btn-secondary" style="margin-top: 1rem;" onclick="adicionarFigura()">➕ Adicionar Nova Figura</button>
         </div>
       </div>
 
@@ -395,20 +422,35 @@
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.min.js"></script>
-  <script>
+  <!-- Carregando docx via importmap -->
+  <script type="importmap">
+    {
+      "imports": {
+        "docx": "https://cdn.jsdelivr.net/npm/docx@8.5.0/+esm"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, HeadingLevel, AlignmentType, WidthType, BorderStyle } from 'docx';
+    
+    // Exportar funções globais
+    window.docxLib = { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, HeadingLevel, AlignmentType, WidthType, BorderStyle };
+
     const formData = {};
     let uploadedFiles = [];
+    let figuras = [];
+    let contador_figuras = 0;
 
-    function switchTab(index) {
+    window.switchTab = function(index) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('.tab-content')[index].classList.add('active');
       document.querySelectorAll('.tab-btn')[index].classList.add('active');
       updateProgress();
-    }
+    };
 
-    function selectPill(element, field, value) {
+    window.selectPill = function(element, field, value) {
       const parent = element.parentElement;
       parent.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
       element.classList.add('active');
@@ -427,9 +469,9 @@
       }
 
       updateProgress();
-    }
+    };
 
-    function selectResponsavel(choice) {
+    window.selectResponsavel = function(choice) {
       const pills = document.querySelectorAll('.tab-content')[5].querySelectorAll('.pill');
       pills.forEach(p => p.classList.remove('active'));
       event.target.classList.add('active');
@@ -444,9 +486,9 @@
         document.getElementById('engenheiro_crea').value = '';
       }
       updateProgress();
-    }
+    };
 
-    function handleFiles(event) {
+    window.handleFiles = function(event) {
       uploadedFiles = Array.from(event.target.files);
       const fileList = document.getElementById('fileList');
       fileList.innerHTML = '';
@@ -461,12 +503,98 @@
         fileList.appendChild(item);
       });
       updateProgress();
-    }
+    };
 
-    function removeFile(idx) {
+    window.removeFile = function(idx) {
       uploadedFiles.splice(idx, 1);
       document.getElementById('imagens').value = '';
       handleFiles({target: {files: uploadedFiles}});
+    };
+
+    window.adicionarFigura = function() {
+      contador_figuras++;
+      const figuraId = `figura_${contador_figuras}`;
+      
+      const container = document.getElementById('figurasContainer');
+      const figuraCard = document.createElement('div');
+      figuraCard.className = 'figura-card';
+      figuraCard.id = figuraId;
+      figuraCard.innerHTML = `
+        <div class="header-figura">
+          <h4>Figura ${contador_figuras}</h4>
+          <button type="button" class="btn-remover" onclick="removerFigura('${figuraId}')">✕ Remover</button>
+        </div>
+        
+        <div class="form-group">
+          <label>Nome da imagem</label>
+          <input type="text" class="figura-nome" placeholder="Ex: Planta de Localização" onchange="updateProgress()">
+        </div>
+
+        <div class="form-group">
+          <label>Título/descrição breve</label>
+          <input type="text" class="figura-titulo" placeholder="Ex: Mapa de delimitação da área vistoriada" onchange="updateProgress()">
+        </div>
+
+        <div class="form-group">
+          <label>Problemas encontrados</label>
+          <textarea class="figura-problemas" placeholder="Descrever anomalias, danos, erosão, etc." onchange="updateProgress()"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Estado estrutural</label>
+          <div class="pill-group grid-3">
+            <button type="button" class="pill" onclick="selectFiguraPill(this, '${figuraId}', 'estado', 'Bom')">Bom</button>
+            <button type="button" class="pill" onclick="selectFiguraPill(this, '${figuraId}', 'estado', 'Regular')">Regular</button>
+            <button type="button" class="pill" onclick="selectFiguraPill(this, '${figuraId}', 'estado', 'Crítico')">Crítico</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Recomendações para esta figura</label>
+          <textarea class="figura-recomendacoes" placeholder="Ações necessárias para esta figura" onchange="updateProgress()"></textarea>
+        </div>
+      `;
+      
+      container.appendChild(figuraCard);
+      updateProgress();
+    };
+
+    window.removerFigura = function(figuraId) {
+      document.getElementById(figuraId).remove();
+      updateProgress();
+    };
+
+    window.selectFiguraPill = function(element, figuraId, field, value) {
+      const parent = element.parentElement;
+      parent.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      element.classList.add('active');
+      updateProgress();
+    };
+
+    function coletarFiguras() {
+      const figurasColetadas = [];
+      const cards = document.querySelectorAll('.figura-card');
+      
+      cards.forEach((card, idx) => {
+        const nome = card.querySelector('.figura-nome').value;
+        const titulo = card.querySelector('.figura-titulo').value;
+        const problemas = card.querySelector('.figura-problemas').value;
+        const estado = card.querySelector('.pill.active')?.textContent || '';
+        const recomendacoes = card.querySelector('.figura-recomendacoes').value;
+        
+        if (nome || titulo || problemas || estado || recomendacoes) {
+          figurasColetadas.push({
+            numero: idx + 1,
+            nome: nome,
+            titulo: titulo,
+            problemas: problemas,
+            estado: estado.trim(),
+            recomendacoes: recomendacoes
+          });
+        }
+      });
+      
+      return figurasColetadas;
     }
 
     function updateProgress() {
@@ -482,9 +610,10 @@
       document.getElementById('progressFill').style.width = progress + '%';
     }
 
-    function salvarRascunho() {
+    window.salvarRascunho = function() {
+      const figurasColetadas = coletarFiguras();
       const dados = {
-        motivo: formData.motivo || document.querySelector('.tab-content')[0].querySelector('.pill.active')?.textContent,
+        motivo: formData.motivo,
         numero_sei: document.getElementById('numero_sei').value,
         numero_os: document.getElementById('numero_os').value,
         data_vistoria: document.getElementById('data_vistoria').value,
@@ -493,20 +622,23 @@
         coordenadas: document.getElementById('coordenadas').value,
         risco: formData.risco,
         prazo: formData.prazo,
+        contexto: document.getElementById('contexto_detalhado').value,
+        figuras: figurasColetadas,
+        conclusao: document.getElementById('conclusao_geral').value,
+        recomendacoes: document.getElementById('recomendacoes_globais').value,
         engenheiro_nome: document.getElementById('engenheiro_nome').value,
         engenheiro_crea: document.getElementById('engenheiro_crea').value,
       };
 
       localStorage.setItem('vistoria_draft', JSON.stringify(dados));
       showAlert('✓ Rascunho salvo com sucesso!', 'success');
-    }
+    };
 
-    function gerarRelatorio() {
+    window.gerarRelatorio = function() {
       const data_vistoria = document.getElementById('data_vistoria').value;
       const localizacao = document.getElementById('localizacao').value;
       const tipo = formData.tipo;
       const risco = formData.risco;
-      const prazo = formData.prazo;
 
       if (!data_vistoria || !localizacao) {
         showAlert('❌ Preencha os campos obrigatórios: Data e Localização', 'error');
@@ -514,89 +646,125 @@
       }
 
       try {
-        const docx = window.docx;
+        const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, HeadingLevel, AlignmentType, WidthType, BorderStyle } = window.docxLib;
+        const figurasColetadas = coletarFiguras();
         
-        const doc = new docx.Document({
+        // Construir texto de análise de figuras
+        let analiseFiguras = '';
+        figurasColetadas.forEach(fig => {
+          analiseFiguras += `\n\nFIGURA ${fig.numero} - ${fig.nome}\n`;
+          analiseFiguras += `Título: ${fig.titulo}\n`;
+          analiseFiguras += `Problemas encontrados: ${fig.problemas}\n`;
+          analiseFiguras += `Estado estrutural: ${fig.estado}\n`;
+          analiseFiguras += `Recomendações: ${fig.recomendacoes}`;
+        });
+
+        // Construir texto de introdução
+        let textoIntroducao = `O presente relatório foi elaborado pelo Consórcio Apoio Técnico DIRRAM, em conformidade com o Contrato nº 35/2022, vinculado ao processo administrativo SEI nº 070002/005517/2022`;
+        
+        if (formData.motivo) {
+          textoIntroducao += `, ${formData.motivo.toLowerCase()}`;
+        }
+        
+        if (document.getElementById('numero_sei').value) {
+          textoIntroducao += ` (SEI: ${document.getElementById('numero_sei').value})`;
+        }
+        
+        if (document.getElementById('numero_os').value) {
+          textoIntroducao += ` (OS: ${document.getElementById('numero_os').value})`;
+        }
+        
+        textoIntroducao += '.';
+        
+        if (document.getElementById('contexto_detalhado').value) {
+          textoIntroducao += `\n\n${document.getElementById('contexto_detalhado').value}`;
+        }
+        
+        const doc = new Document({
           sections: [{
             properties: { page: { margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } },
             children: [
-              new docx.Paragraph({ text: "RELATÓRIO DE VISTORIA", heading: docx.HeadingLevel.HEADING_1, alignment: docx.AlignmentType.CENTER, spacing: { after: 200 } }),
-              new docx.Paragraph({ text: tipo || "Infraestrutura Hídrica", alignment: docx.AlignmentType.CENTER, spacing: { after: 400 } }),
-              new docx.Paragraph({ text: localizacao, alignment: docx.AlignmentType.CENTER, spacing: { after: 600 } }),
+              new Paragraph({ text: "RELATÓRIO DE VISTORIA", heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER, spacing: { after: 200 } }),
+              new Paragraph({ text: tipo || "Infraestrutura Hídrica", alignment: AlignmentType.CENTER, spacing: { after: 400 } }),
+              new Paragraph({ text: localizacao, alignment: AlignmentType.CENTER, spacing: { after: 600 } }),
 
-              new docx.Paragraph({ text: "ÍNDICE", heading: docx.HeadingLevel.HEADING_1, spacing: { after: 200 } }),
-              new docx.Paragraph({ text: "1. INTRODUÇÃO", spacing: { after: 100 } }),
-              new docx.Paragraph({ text: "2. VISTORIA TÉCNICA", spacing: { after: 100 } }),
-              new docx.Paragraph({ text: "3. CONCLUSÃO", spacing: { after: 400 } }),
+              new Paragraph({ text: "ÍNDICE", heading: HeadingLevel.HEADING_1, spacing: { after: 200 } }),
+              new Paragraph({ text: "1. INTRODUÇÃO", spacing: { after: 100 } }),
+              new Paragraph({ text: "2. VISTORIA TÉCNICA", spacing: { after: 100 } }),
+              new Paragraph({ text: "3. CONCLUSÃO", spacing: { after: 400 } }),
 
-              new docx.Paragraph({ text: "", pageBreakBefore: true }),
+              new Paragraph({ text: "", pageBreakBefore: true }),
 
-              new docx.Paragraph({ text: "1. INTRODUÇÃO", heading: docx.HeadingLevel.HEADING_1, spacing: { after: 200 } }),
-              new docx.Paragraph({ 
-                text: `O presente relatório foi elaborado pelo Consórcio Apoio Técnico DIRRAM, em conformidade com o Contrato nº 35/2022, vinculado ao processo administrativo SEI nº 070002/005517/2022${document.getElementById('numero_sei').value ? ` (SEI: ${document.getElementById('numero_sei').value})` : ''}.`,
-                spacing: { after: 200 } 
-              }),
-              new docx.Paragraph({ text: document.getElementById('contexto_detalhado').value || "Vistoria realizada conforme solicitação.", spacing: { after: 400 } }),
+              new Paragraph({ text: "1. INTRODUÇÃO", heading: HeadingLevel.HEADING_1, spacing: { after: 200 } }),
+              new Paragraph({ text: textoIntroducao, spacing: { after: 400 } }),
 
-              new docx.Paragraph({ text: "Informações da Vistoria", heading: docx.HeadingLevel.HEADING_2, spacing: { after: 200 } }),
+              new Paragraph({ text: "Informações da Vistoria", heading: HeadingLevel.HEADING_2, spacing: { after: 200 } }),
 
-              new docx.Table({
-                width: { size: 9360, type: docx.WidthType.DXA },
+              new Table({
+                width: { size: 9360, type: WidthType.DXA },
                 rows: [
-                  new docx.TableRow({
+                  new TableRow({
                     children: [
-                      new docx.TableCell({ borders: { top: { style: docx.BorderStyle.SINGLE }, bottom: { style: docx.BorderStyle.SINGLE }, left: { style: docx.BorderStyle.SINGLE }, right: { style: docx.BorderStyle.SINGLE } }, shading: { fill: "D5E8F0", type: docx.ShadingType.CLEAR }, children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "Data", bold: true })] })] }),
-                      new docx.TableCell({ borders: { top: { style: docx.BorderStyle.SINGLE }, bottom: { style: docx.BorderStyle.SINGLE }, left: { style: docx.BorderStyle.SINGLE }, right: { style: docx.BorderStyle.SINGLE } }, children: [new docx.Paragraph({ text: data_vistoria })] })
+                      new TableCell({ borders: { top: { style: BorderStyle.SINGLE }, bottom: { style: BorderStyle.SINGLE }, left: { style: BorderStyle.SINGLE }, right: { style: BorderStyle.SINGLE } }, shading: { fill: "D5E8F0", type: "clear" }, children: [new Paragraph({ children: [new TextRun({ text: "Data", bold: true })] })] }),
+                      new TableCell({ borders: { top: { style: BorderStyle.SINGLE }, bottom: { style: BorderStyle.SINGLE }, left: { style: BorderStyle.SINGLE }, right: { style: BorderStyle.SINGLE } }, children: [new Paragraph({ text: data_vistoria })] })
                     ]
                   }),
-                  new docx.TableRow({
+                  new TableRow({
                     children: [
-                      new docx.TableCell({ borders: { top: { style: docx.BorderStyle.SINGLE }, bottom: { style: docx.BorderStyle.SINGLE }, left: { style: docx.BorderStyle.SINGLE }, right: { style: docx.BorderStyle.SINGLE } }, shading: { fill: "D5E8F0", type: docx.ShadingType.CLEAR }, children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "Tipo", bold: true })] })] }),
-                      new docx.TableCell({ borders: { top: { style: docx.BorderStyle.SINGLE }, bottom: { style: docx.BorderStyle.SINGLE }, left: { style: docx.BorderStyle.SINGLE }, right: { style: docx.BorderStyle.SINGLE } }, children: [new docx.Paragraph({ text: tipo || "Não especificado" })] })
+                      new TableCell({ borders: { top: { style: BorderStyle.SINGLE }, bottom: { style: BorderStyle.SINGLE }, left: { style: BorderStyle.SINGLE }, right: { style: BorderStyle.SINGLE } }, shading: { fill: "D5E8F0", type: "clear" }, children: [new Paragraph({ children: [new TextRun({ text: "Tipo", bold: true })] })] }),
+                      new TableCell({ borders: { top: { style: BorderStyle.SINGLE }, bottom: { style: BorderStyle.SINGLE }, left: { style: BorderStyle.SINGLE }, right: { style: BorderStyle.SINGLE } }, children: [new Paragraph({ text: tipo || "Não especificado" })] })
                     ]
                   }),
-                  new docx.TableRow({
+                  new TableRow({
                     children: [
-                      new docx.TableCell({ borders: { top: { style: docx.BorderStyle.SINGLE }, bottom: { style: docx.BorderStyle.SINGLE }, left: { style: docx.BorderStyle.SINGLE }, right: { style: docx.BorderStyle.SINGLE } }, shading: { fill: "D5E8F0", type: docx.ShadingType.CLEAR }, children: [new docx.Paragraph({ children: [new docx.TextRun({ text: "Risco", bold: true })] })] }),
-                      new docx.TableCell({ borders: { top: { style: docx.BorderStyle.SINGLE }, bottom: { style: docx.BorderStyle.SINGLE }, left: { style: docx.BorderStyle.SINGLE }, right: { style: docx.BorderStyle.SINGLE } }, children: [new docx.Paragraph({ text: risco || "Não especificado" })] })
+                      new TableCell({ borders: { top: { style: BorderStyle.SINGLE }, bottom: { style: BorderStyle.SINGLE }, left: { style: BorderStyle.SINGLE }, right: { style: BorderStyle.SINGLE } }, shading: { fill: "D5E8F0", type: "clear" }, children: [new Paragraph({ children: [new TextRun({ text: "Risco", bold: true })] })] }),
+                      new TableCell({ borders: { top: { style: BorderStyle.SINGLE }, bottom: { style: BorderStyle.SINGLE }, left: { style: BorderStyle.SINGLE }, right: { style: BorderStyle.SINGLE } }, children: [new Paragraph({ text: risco || "Não especificado" })] })
                     ]
                   })
                 ]
               }),
 
-              new docx.Paragraph({ text: "", spacing: { after: 400 } }),
-              new docx.Paragraph({ text: "", pageBreakBefore: true }),
+              new Paragraph({ text: "", spacing: { after: 400 } }),
+              new Paragraph({ text: "", pageBreakBefore: true }),
 
-              new docx.Paragraph({ text: "2. VISTORIA TÉCNICA", heading: docx.HeadingLevel.HEADING_1, spacing: { after: 200 } }),
-              new docx.Paragraph({ text: "Análise de Figuras", heading: docx.HeadingLevel.HEADING_2, spacing: { after: 200 } }),
-              new docx.Paragraph({ text: document.getElementById('figuras_analise').value || "Figuras foram analisadas conforme descrito acima.", spacing: { after: 400 } }),
+              new Paragraph({ text: "2. VISTORIA TÉCNICA", heading: HeadingLevel.HEADING_1, spacing: { after: 200 } }),
+              new Paragraph({ text: "Análise de Figuras", heading: HeadingLevel.HEADING_2, spacing: { after: 200 } }),
+              new Paragraph({ text: analiseFiguras || "Figuras foram analisadas conforme descrito acima.", spacing: { after: 400 } }),
 
-              new docx.Paragraph({ text: "", pageBreakBefore: true }),
+              new Paragraph({ text: "", pageBreakBefore: true }),
 
-              new docx.Paragraph({ text: "3. CONCLUSÃO", heading: docx.HeadingLevel.HEADING_1, spacing: { after: 200 } }),
-              new docx.Paragraph({ text: document.getElementById('conclusao_geral').value || "A vistoria foi realizada conforme planejado.", spacing: { after: 400 } }),
+              new Paragraph({ text: "3. CONCLUSÃO", heading: HeadingLevel.HEADING_1, spacing: { after: 200 } }),
+              new Paragraph({ text: document.getElementById('conclusao_geral').value || "A vistoria foi realizada conforme planejado.", spacing: { after: 400 } }),
 
-              new docx.Paragraph({ text: "Recomendações", heading: docx.HeadingLevel.HEADING_2, spacing: { after: 200 } }),
-              new docx.Paragraph({ text: document.getElementById('recomendacoes_globais').value || "As recomendações foram delineadas conforme análise.", spacing: { after: 600 } }),
+              new Paragraph({ text: "Recomendações", heading: HeadingLevel.HEADING_2, spacing: { after: 200 } }),
+              new Paragraph({ text: document.getElementById('recomendacoes_globais').value || "As recomendações foram delineadas conforme análise.", spacing: { after: 600 } }),
 
-              new docx.Paragraph({ text: "", spacing: { after: 400 } }),
-              new docx.Paragraph({ text: new Date().toLocaleDateString('pt-BR'), spacing: { after: 600 } }),
-              new docx.Paragraph({ text: "_".repeat(50), spacing: { after: 100 } }),
-              new docx.Paragraph({ text: document.getElementById('engenheiro_nome').value || "Erick Santana Amâncio", spacing: { after: 50 } }),
-              new docx.Paragraph({ text: document.getElementById('engenheiro_formacao').value || "Engenheiro Civil", spacing: { after: 50 } }),
-              new docx.Paragraph({ text: document.getElementById('engenheiro_crea').value || "CREA-RJ - 2013138619" })
+              new Paragraph({ text: "", spacing: { after: 400 } }),
+              new Paragraph({ text: new Date().toLocaleDateString('pt-BR'), spacing: { after: 600 } }),
+              new Paragraph({ text: "_".repeat(50), spacing: { after: 100 } }),
+              new Paragraph({ text: document.getElementById('engenheiro_nome').value || "Erick Santana Amâncio", spacing: { after: 50 } }),
+              new Paragraph({ text: document.getElementById('engenheiro_formacao').value || "Engenheiro Civil", spacing: { after: 50 } }),
+              new Paragraph({ text: document.getElementById('engenheiro_crea').value || "CREA-RJ - 2013138619" })
             ]
           }]
         });
 
-        docx.Packer.toBlob(doc).then(blob => {
-          saveAs(blob, `RELATORIO_VISTORIA_${data_vistoria}.docx`);
+        Packer.toBlob(doc).then(blob => {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `RELATORIO_VISTORIA_${data_vistoria}.docx`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
           showAlert('✓ Relatório gerado com sucesso! Download iniciado.', 'success');
         });
       } catch (error) {
+        console.error('Erro detalhado:', error);
         showAlert('❌ Erro ao gerar relatório: ' + error.message, 'error');
       }
-    }
+    };
 
     function showAlert(message, type) {
       const box = document.getElementById('alertBox');
@@ -605,11 +773,10 @@
       setTimeout(() => box.classList.remove('show'), 5000);
     }
 
+    window.updateProgress = updateProgress;
+
     window.onload = () => {
-      const draft = localStorage.getItem('vistoria_draft');
-      if (draft) {
-        console.log('Rascunho carregado');
-      }
+      adicionarFigura();
     };
   </script>
 </body>
